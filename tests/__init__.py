@@ -11,9 +11,13 @@ class TestModel:
     age: int
     registered: bool
     birth: datetime
+    color: tuple[int, int, int]
 
 
-class CreateForm(BaseForm, model=TestModel, callback=lambda sender, o: objs.append(o)):
+class CreateForm(BaseForm,
+    model=TestModel,
+    callback=lambda sender, o: objs.append(o),
+    type_hints_patch={'color': float}):
     pass
 
 def test():
