@@ -12,7 +12,7 @@ class TestModel(BaseModel):
     age: int
     registered: bool
     birth: datetime
-    color: tuple[int, int, int]
+    color: float
 
 
 class CreateForm(BaseForm,
@@ -21,11 +21,13 @@ class CreateForm(BaseForm,
     type_hints_patch={'color': float}):
     pass
 
+default_form_values = TestModel(name='asdf', age=228, registered=True, birth=datetime(2000, 9, 14), color=1)
 def test():
     dpg.create_context()
     dpg.create_viewport()
     dpg.show_viewport()
     form = CreateForm(label='kek')
+    form.fill(default_form_values)
     with dpg.window():
         form.add_me()
         dpg.add_button(label='Test', callback=lambda: form.fill(objs[0]))
