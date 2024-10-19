@@ -2,11 +2,12 @@ from datetime import datetime
 import dearpygui.dearpygui as dpg
 from dpg_forms import BaseForm
 from dataclasses import dataclass
+from pydantic import BaseModel
+
 
 objs = []
 
-@dataclass
-class TestModel:
+class TestModel(BaseModel):
     name: str
     age: int
     registered: bool
@@ -16,7 +17,7 @@ class TestModel:
 
 class CreateForm(BaseForm,
     model=TestModel,
-    callback=lambda sender, o: objs.append(o),
+    callback=lambda sender, o: print(o),
     type_hints_patch={'color': float}):
     pass
 
