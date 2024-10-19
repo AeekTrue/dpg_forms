@@ -3,6 +3,12 @@ from typing import Callable, get_type_hints
 from datetime import datetime
 
 
+def datetime_from_date_picker_value(value):
+    return datetime(value['year']+1900, value['month']+1, value['month_day'])
+
+def date_picker_value_from_datetime(value: datetime):
+    return {'year': value.year - 1900, 'month': value.month - 1, 'month_day': value.day}
+
 type_field_mapping = {
     str: dpg.add_input_text,
     int: dpg.add_input_int,
@@ -11,10 +17,19 @@ type_field_mapping = {
     datetime: dpg.add_date_picker
 }
 
+default_adapters = {
+    datetime: datetime_from_date_picker_value
+}
+
+default_fillers = {
+    datetime: date_picker_value_from_datetime
+}
 
 class BaseForm:
     Model: type
     field_types: dict
+    field_names: list
+    field_ids: list
     submit_callback: Callable
     value_adapters: dict
     def __init_subclass__(cls, model, callback,
@@ -35,7 +50,7 @@ class BaseForm:
         self.field_names = []
         with dpg.stage() as self._staging_containter_id:
             with dpg.group(label=label) as group_id:
-                for field_name in self.field_types:
+                for field_name in self.field_types.keys():
                     field_type = self.field_types[field_name]
                     dpg_field = type_field_mapping.get(field_type)
                     if dpg_field is not None:
@@ -52,7 +67,7 @@ class BaseForm:
         self.submit_callback(o)
 
     def adapt_value(self, field_name, value):
-        adapter = self.value_adapters.get(field_name)
+        adapter = self.value_adapters.get(field_name) or default_adapters.get(self.field_types[field_name])
         if adapter is not None:
             return adapter(value)
         else:
@@ -65,5 +80,12 @@ class BaseForm:
         for field_name in self.field_types:
             if hasattr(obj, field_name):
                 value = getattr(obj, field_name)
-                field_id = self.field_ids[self.field_names.index(field_name)]
-                dpg.set_value(field_id, value)
+                self.fill_value(field_name, value)
+
+    def fill_value(self, field_name, value):
+        field_id = self.field_ids[self.field_names.index(field_name)]
+        filler = default_fillers.get(self.field_types[field_name])
+        if filler is not None:
+            value = filler(value)
+        print('Fill', field_id, value)
+        dpg.set_value(field_id, value)
